@@ -311,7 +311,7 @@ Example:
 
 * names are all lowercase
 * ${name}-${env}-${object_type}
-  * Examples: acme-dev-irule, internaladdresses-qa-class
+  * Examples: ${acme-dev-irule}, ${internaladdresses-qa-class}
 
 ---
 
