@@ -8,45 +8,64 @@ This is a list of what I consider F5 LTM iRule development best practices.  If y
 
 If environment-specific content is used in an iRule, an environment-specific variables iRule _must_ also be created and be applied as the first iRule for the VIP.  Then, all references to those objects _must_ be done via the variables.  This makes promition of iRule logic from dev => qa => prd simple because the iRules can be _exactly_ the same.
 
-Example: acmevar-dev-irule  
+Example: acmeVars-1.0.0-irule
 
 	when HTTP_REQUEST {
-		
-		# PURPOSE:	Establish environment specific object variables
-		#
-		
+
+		# Assign environment
+		if     { [IP::local_addr] equals "10.0.0.50"    } { set my_env "prd" }
+		elseif { [IP::local_addr] equals "10.254.1.136" } { set my_env "qa" }
+		elseif { [IP::local_addr] equals "10.254.1.137" } { set my_env "dev" }
+
 		# Host header definitions, sorted alphabetically
-		
-		set my_default_host		"web-dev.acme.com"
-		set ecommerce_host		"store-dev.acme.com"
-		
+		if     { $my_env equals "prd" } { set my_default_host "www.acme.com" }
+		elseif { $my_env equals "qa"  } { set my_default_host "www-qa.acme.com" }
+		elseif { $my_env equals "dev" } { set my_default_host "www-dev.acme.com" }
+	
+		if     { $my_env equals "prd" } { set ecommerce_host "store.acme.com" }
+		elseif { $my_env equals "qa"  } { set ecommerce_host "store-qa.acme.com" }
+		elseif { $my_env equals "dev" } { set ecommerce_host "store-dev.acme.com" }
+
 		# Class definitions, sorted alphabetically
-		
-		set storeipaddress-class	"storeipaddress-dev-class"
-		set eviluseragents-class	"evilUserAgents-dev-class"
-		set internalip-class		"internalip-dev-class"
-		
+		if     { $my_env equals "prd" } { set storeipaddress-class "storeipaddress-1.0.0-class" }
+		elseif { $my_env equals "qa"  } { set storeipaddress-class "storeipaddress-1.0.0-class" }
+		elseif { $my_env equals "dev" } { set storeipaddress-class "storeipaddress-1.0.0-class" }
+	
+		if     { $my_env equals "prd" } { set eviluseragents-class "evilUserAgents-1.0.0-class" }
+		elseif { $my_env equals "qa"  } { set eviluseragents-class "evilUserAgents-1.0.0-class" }
+		elseif { $my_env equals "dev" } { set eviluseragents-class "evilUserAgents-1.0.0-class" }
+
+		if     { $my_env equals "prd" } { set internalip-class "internalip-1.0.0-class" }
+		elseif { $my_env equals "qa"  } { set internalip-class "internalip-1.0.0-class" }
+		elseif { $my_env equals "dev" } { set internalip-class "internalip-1.0.0-class" }
+
 		# Pool definitions, sorted alphabetically
-		
-		set acmecontent-pool		"acme-dev-pool"
+		if     { $my_env equals "prd" } { set acmecontent-pool "acme-prd-pool" }
+		elseif { $my_env equals "qa"  } { set acmecontent-pool "acme-qa-pool" }
+		elseif { $my_env equals "dev" } { set acmecontent-pool "acme-dev-pool" }
+
 	}
 
-Example: acme-dev-irule  
+
+
+Example: acme-1.0.0-irule  
 
 	when HTTP_REQUEST {
-	
-		# PURPOSE:	Redirects requests based on host header values, or sets the default host header value
-		#
-		
-		set my_luri [string tolower [HTTP::uri]]
-		
-		if { not ( [HTTP::host] equals ${my_default_host} ) } {
-			switch -glob [HTTP::host] {
-				"buy.acme.com" {HTTP::respond 301 "location" "https://${ecommerce_host}" }
-				default { HTTP::respond 301 "location" "https://${my_default_host}[HTTP::uri]" }
-			}		
-		}
-	}
+
+    		# PURPOSE:  Redirects requests based on host header values, or sets the default host header value
+    		#
+
+    		set my_luri [string tolower [HTTP::uri]]
+
+    		if { not ( [HTTP::host] equals ${my_default_host} ) } {
+        		switch -glob [HTTP::host] {
+        		    "buy.acme.com" {HTTP::respond 301 "location" "https://${ecommerce_host}" }
+        		    default { HTTP::respond 301 "location" "https://${my_default_host}[HTTP::uri]" }
+        		}       
+    		} else {
+    			pool ${acmecontent-pool}
+    		}
+    	}
 
 
 * Notice the use of the **${my\_default\_host}** and **${ecommerce\_host}** variables in the acme-dev-irule iRule.
