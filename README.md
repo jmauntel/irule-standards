@@ -68,7 +68,7 @@ Example: acme-1.0.0-irule
     	}
 
 
-* Notice the use of the **${my\_default\_host}** and **${ecommerce\_host}** variables in the acme-dev-irule iRule.
+* Notice the use of the **${my\_default\_host}** and **${ecommerce\_host}** variables in the acme-1.0.0-irule iRule.
 
 ---
 
